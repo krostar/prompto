@@ -1,0 +1,50 @@
+---
+
+left-segments:
+  - "read-only"
+  - "cwd"
+
+right-segments:
+  - "last-cmd-exec-time"
+  - "last-cmd-exec-status"
+
+separator:
+  content-left: "\uE0B0"
+  content-left-thin: "\uE0B1"
+  content-right: "\uE0B2"
+  content-right-thin: "\uE0B3"
+
+segments:
+  cwd:
+    fg: 250
+    bg: 236
+    separator-fg: 244
+    special:
+      -last-:
+        fg: 254
+        bg: 236
+      "$HOME":
+        fg: 254
+        bg: 25
+        separator-fg: 32
+        replace-with: "~"
+  last-cmd-exec-status:
+    success:
+      hide: true
+    failure:
+      fg: 250
+      bg: 52
+  last-cmd-exec-time:
+    fg: 250
+    bg: 236
+    treshold-display: "1s"
+    treshold-truncate:
+      "1s": "10ms"
+      "1m": "100ms"
+      "1h": "10s"
+  read-only:
+    fg: 250
+    bg: 52
+    content: "\uE0A2"
+
+...
