@@ -23,11 +23,27 @@ segments:
       -last-:
         fg: 254
         bg: 236
+        separator-fg: 244
       "$HOME":
+        fg: 254
+        bg: 236
+        separator-fg: 244
+        replace-with: "~"
+      "$GOPATH":
         fg: 254
         bg: 25
         separator-fg: 32
-        replace-with: "~"
+        replace-with: "$GOPATH"
+      "$GOPATH/src/github.mpi-internal.com/leboncoin/go":
+        fg: 15
+        bg: 166
+        separator-fg: 172
+        replace-with: "lbc/go"
+      "$HOME/Work/Perso/go":
+        fg: 254
+        bg: 25
+        separator-fg: 32
+        replace-with: "go"
   last-cmd-exec-status:
     success:
       hide: true

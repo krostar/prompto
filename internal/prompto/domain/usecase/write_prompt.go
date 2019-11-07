@@ -10,12 +10,14 @@ import (
 )
 
 // WritePrompt usecase creates and writes a prompt.
-func WritePrompt() PromptWriterFunc {
-	return (&promptWriter{}).WritePrompt
+func WritePrompt(writeTo io.Writer) PromptWriterFunc {
+	return (&promptWriter{
+		writeTo: writeTo,
+	}).WritePrompt
 }
 
 // PromptWriterFunc defines the function signature to write a prompt.
-type PromptWriterFunc func(context.Context, PromptCreationRequest, io.Writer) error
+type PromptWriterFunc func(context.Context, PromptCreationRequest) error
 
 // PromptCreationRequest defines how to create a prompt.
 type PromptCreationRequest struct {
@@ -24,9 +26,11 @@ type PromptCreationRequest struct {
 	SeparatorConfig  domain.SeparatorConfig
 }
 
-type promptWriter struct{}
+type promptWriter struct {
+	writeTo io.Writer
+}
 
-func (p *promptWriter) WritePrompt(ctx context.Context, req PromptCreationRequest, to io.Writer) error {
+func (p *promptWriter) WritePrompt(ctx context.Context, req PromptCreationRequest) error {
 	var segments domain.Segments
 
 	for _, segmenter := range req.SegmentsProvider {
@@ -43,7 +47,7 @@ func (p *promptWriter) WritePrompt(ctx context.Context, req PromptCreationReques
 		return fmt.Errorf("unable to create prompt: %w", err)
 	}
 
-	if _, err := prompt.WriteTo(to); err != nil {
+	if _, err := prompt.WriteTo(p.writeTo); err != nil {
 		return fmt.Errorf("unable to write prompt: %w", err)
 	}
 

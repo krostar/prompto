@@ -18,6 +18,7 @@ type cwd struct {
 	cfg      cwdConfig
 	cwd      string
 	cwdDepth int
+	specials []cwdConfigSpecial
 }
 
 func segmentCWD(rcfg interface{}) (domain.SegmentsProvider, error) {
@@ -32,12 +33,12 @@ func segmentCWD(rcfg interface{}) (domain.SegmentsProvider, error) {
 	}
 
 	pwd = filepath.Clean(pwd)
-	cfg.keepUsefulSpecialOnly(pwd)
 
 	return &cwd{
 		cwd:      pwd,
 		cwdDepth: len(pathx.SplitPath(pwd)),
 		cfg:      cfg,
+		specials: cfg.getUsefulSpecial(pwd),
 	}, nil
 }
 
@@ -45,8 +46,8 @@ func (s *cwd) ProvideSegments() (domain.Segments, error) {
 	var segments domain.Segments
 
 	if err := pathx.WalkBackward(s.cwd, func(path string) error {
-		if segment := s.pathToSegment(path); segment != nil {
-			segments = append(segments, segment)
+		if ss := s.pathToSegments(path); ss != nil {
+			segments = append(segments, ss...)
 		}
 		return nil
 	}); err != nil {
@@ -58,49 +59,80 @@ func (s *cwd) ProvideSegments() (domain.Segments, error) {
 	return segments, nil
 }
 
-func (s *cwd) pathToSegment(path string) *domain.Segment {
-	// default style and content
-	style := domain.NewStyle(
-		domain.NewFGColor(s.cfg.ColorForeground),
-		domain.NewBGColor(s.cfg.ColorBackground),
+func (s *cwd) defaultSegmentComponents(path string) (string, domain.Style, uint8) {
+	return filepath.Base(path),
+		domain.NewStyle(
+			domain.NewFGColor(s.cfg.ColorForeground),
+			domain.NewBGColor(s.cfg.ColorBackground),
+		),
+		s.cfg.SeparatorForegroundColor
+}
+
+func (s *cwd) specialSegmentConfig(path string) (*cwdConfigSpecial, bool) {
+	var (
+		mostInterestingSpecial *cwdConfigSpecial
+		dropSegment            bool
 	)
-	separatorColorFG := s.cfg.SeparatorForegroundColor
-	content := filepath.Base(path)
 
 	if last, exists := s.cfg.Special[cwdSpecialLast]; exists && path == s.cwd {
-		style = domain.NewStyle(
-			domain.NewFGColor(last.ColorForeground),
-			domain.NewBGColor(last.ColorBackground),
-		)
+		mostInterestingSpecial = &last
 	}
 
-	for p, special := range s.cfg.Special {
-		// special should be taken in consideration only if
-		//	its depth is smaller than cwd's depth
-		//	it has the same prefix
-		if special.depth <= s.cwdDepth && strings.HasPrefix(p, path) {
-			// drop segment that will be replaced
-			if path != p && special.ReplaceWith != "" {
-				return nil
+	// fmt.Println("===", path)
+	for _, special := range s.specials {
+		// fmt.Println(special.path, special.depth, s.cwdDepth, strings.HasPrefix(special.path, path))
+		// special should be taken in consideration only if its depth
+		// is smaller than cwd's depth and has the same prefix
+		if special.depth <= s.cwdDepth && strings.HasPrefix(special.path, path) {
+			// drop segment as it will be replaced
+			if path != special.path && special.ReplaceWith != "" {
+				dropSegment = true
+				break
 			}
 
-			// otherwise apply the desired style
-			style = domain.NewStyle(
-				domain.NewFGColor(special.ColorForeground),
-				domain.NewBGColor(special.ColorBackground),
-			)
-			separatorColorFG = special.SeparatorForeground
-
-			if path == p && special.ReplaceWith != "" {
-				content = special.ReplaceWith
-			}
+			special := special
+			mostInterestingSpecial = &special
 
 			break // we found one special, that's enough :)
 		}
 	}
 
-	return domain.NewSegment(content).
-		WithSpaceAround().
-		SetStyle(style).
-		SetSeparatorColor(domain.NewFGColor(separatorColorFG))
+	return mostInterestingSpecial, dropSegment
+}
+
+func (s *cwd) pathToSegments(path string) domain.Segments {
+	// default style and content
+	content, style, sepFGColor := s.defaultSegmentComponents(path)
+
+	special, dropSegment := s.specialSegmentConfig(path)
+	if dropSegment {
+		return nil
+	}
+
+	if special != nil {
+		style = domain.NewStyle(
+			domain.NewFGColor(special.ColorForeground),
+			domain.NewBGColor(special.ColorBackground),
+		)
+		sepFGColor = special.SeparatorForeground
+
+		if special.ReplaceWith != "" {
+			content = special.ReplaceWith
+		}
+	}
+
+	var segments domain.Segments
+
+	// in case content is separated with slashes, create multiple segments
+	paths := pathx.SplitPath(content)
+	for i := range paths {
+		segments = append(segments, domain.
+			NewSegment(paths[len(paths)-i-1]).
+			WithSpaceAround().
+			SetStyle(style).
+			SetSeparatorColor(domain.NewFGColor(sepFGColor)),
+		)
+	}
+
+	return segments
 }

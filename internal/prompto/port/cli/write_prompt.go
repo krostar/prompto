@@ -48,7 +48,7 @@ func CommandWritePrompt(ctx context.Context) (*cobra.Command, context.Context, e
 			showHelp:    showHelp,
 			cfg:         cfg,
 			log:         clix.LoggerFromContext(ctx),
-			writePrompt: usecase.WritePrompt(),
+			writePrompt: usecase.WritePrompt(os.Stdout),
 		}, nil
 	})
 
@@ -109,7 +109,7 @@ type writePromptCommandConfig struct {
 
 func (c *writePromptCommand) Handle(ctx context.Context, args, dashed []string) error {
 	if !color.IsSupport256Color() {
-		return fmt.Errorf("256-color no supported by terminal")
+		return fmt.Errorf("256-color not supported by terminal")
 	}
 
 	var (
@@ -119,6 +119,8 @@ func (c *writePromptCommand) Handle(ctx context.Context, args, dashed []string) 
 	)
 
 	switch {
+	case c.cfg.LeftOnly && c.cfg.RightOnly:
+		err = errors.New("either left or right prompt direction must be chosen, not both")
 	case c.cfg.LeftOnly:
 		direction = domain.DirectionLeft
 		segmenters, err = segment.ProvideSegments(c.cfg.LeftSegments, c.cfg.Segments)
@@ -137,7 +139,7 @@ func (c *writePromptCommand) Handle(ctx context.Context, args, dashed []string) 
 		Direction:        direction,
 		SegmentsProvider: segmenters,
 		SeparatorConfig:  c.cfg.Separator,
-	}, os.Stdout); err != nil {
+	}); err != nil {
 		return fmt.Errorf("unable to write prompt to stdout: %w", err)
 	}
 

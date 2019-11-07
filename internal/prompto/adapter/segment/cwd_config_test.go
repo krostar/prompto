@@ -2,6 +2,6 @@ package segment
 
 import "testing"
 
-func TestCWDConfig_keepUsefulSpecialOnly(t *testing.T) {
+func TestCWDConfig_getUsefulSpecial(t *testing.T) {
 	t.FailNow()
 }

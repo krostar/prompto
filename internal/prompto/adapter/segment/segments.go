@@ -7,12 +7,23 @@ import (
 	"github.com/krostar/prompto/internal/prompto/domain"
 )
 
+const (
+	// SegmentNameUnknown defines the segment name to use for failure.
+	SegmentNameUnknown = ""
+	// SegmentNameStub defines the segment name to use for stub.
+	SegmentNameStub = "-stub-"
+)
+
 // this is easier to handle the mapping this way
 // nolint: gochecknoglobals
 var segmentsMapper = map[string]struct {
 	create       func(interface{}) (domain.SegmentsProvider, error)
 	configGetter func(Config) interface{}
 }{
+	SegmentNameStub: {
+		create:       segmentStub,
+		configGetter: func(cfg Config) interface{} { return cfg.Stub },
+	},
 	"cwd": {
 		create:       segmentCWD,
 		configGetter: func(cfg Config) interface{} { return cfg.CWD },
@@ -33,6 +44,8 @@ var segmentsMapper = map[string]struct {
 
 // Config stores the configuration for all segments provider.
 type Config struct {
+	Stub StubConfig `yaml:"-"`
+
 	CWD               cwdConfig               `yaml:"cwd"`
 	LastCMDExecStatus lastCmdExecStatusConfig `yaml:"last-cmd-exec-status"`
 	LastCMDExecTime   lastCmdExecTimeConfig   `yaml:"last-cmd-exec-time"`

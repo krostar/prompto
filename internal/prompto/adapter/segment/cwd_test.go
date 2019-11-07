@@ -10,6 +10,14 @@ func TestCWD_ProvideSegments(t *testing.T) {
 	t.FailNow()
 }
 
-func TestCWD_pathToSegment(t *testing.T) {
+func TestCWD_defaultSegmentComponents(t *testing.T) {
+	t.FailNow()
+}
+
+func TestCWD_specialSegmentConfig(t *testing.T) {
+	t.FailNow()
+}
+
+func TestCWD_pathToSegments(t *testing.T) {
 	t.FailNow()
 }
