@@ -1,8 +1,6 @@
 package segment
 
 import (
-	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 
@@ -37,16 +35,7 @@ func (c *cwdConfig) getUsefulSpecial(cwd string) []cwdConfigSpecial {
 		}
 
 		// replace all environment-based specials
-		pathSplit := pathx.SplitPath(path)
-		for i, split := range pathSplit {
-			if strings.HasPrefix(split, "$") {
-				if p, isset := os.LookupEnv(split[1:]); isset && p != "" {
-					pathSplit[i] = p
-				}
-			}
-		}
-
-		path = filepath.Join(pathSplit...)
+		path = replaceEnvironmentInPath(path)
 
 		// add only the special usable with the cwd
 		if strings.HasPrefix(cwd, path) {

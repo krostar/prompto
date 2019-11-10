@@ -27,18 +27,18 @@ func segmentCWD(rcfg interface{}) (domain.SegmentsProvider, error) {
 		return nil, errors.New("segmentCWD expected 1 arg of type cwd.Config")
 	}
 
-	pwd, isset := os.LookupEnv("PWD")
-	if !isset {
-		return nil, errors.New("pwd environment variable is not set")
+	wd, err := os.Getwd()
+	if err != nil {
+		return nil, fmt.Errorf("unable to get current working directory: %w", err)
 	}
 
-	pwd = filepath.Clean(pwd)
+	wd = filepath.Clean(wd)
 
 	return &cwd{
-		cwd:      pwd,
-		cwdDepth: len(pathx.SplitPath(pwd)),
+		cwd:      wd,
+		cwdDepth: len(pathx.SplitPath(wd)),
 		cfg:      cfg,
-		specials: cfg.getUsefulSpecial(pwd),
+		specials: cfg.getUsefulSpecial(wd),
 	}, nil
 }
 

@@ -3,6 +3,7 @@
 left-segments:
   - "read-only"
   - "cwd"
+  - "git"
 
 right-segments:
   - "last-cmd-exec-time"
@@ -62,5 +63,14 @@ segments:
     fg: 250
     bg: 52
     content: "\uE0A2"
+  git:
+    # ignore:
+      # - $GOPATH/src/github.mpi-internal.com/leboncoin/go
+    clean:
+      bg: 106
+      fg: 15
+    changes:
+      bg: 167
+      fg: 15
 
 ...

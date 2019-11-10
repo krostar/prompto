@@ -8,11 +8,11 @@ import (
 // Segment is a part of a prompt. It is composed
 // of a content, a style, and a separator.
 type Segment struct {
-	content string
-
+	content            string
 	style              Style
-	separator          *Separator
 	thinSeparatorColor Color
+
+	sep *Separator
 }
 
 // NewSegment creates a new segment.
@@ -27,21 +27,21 @@ func (s *Segment) SetStyle(style Style) *Segment {
 	return s
 }
 
-// Separator returns the separator of the segment.
-func (s *Segment) Separator() *Separator { return s.separator }
-
-// SetSeparator sets the separator of the segment.
-func (s *Segment) SetSeparator(separator *Separator) *Segment {
-	s.separator = separator
-	return s
-}
-
 // SeparatorColor returns the separator color of the segment.
 func (s *Segment) SeparatorColor() Color { return s.thinSeparatorColor }
 
 // SetSeparatorColor sets the separator color of the segment.
 func (s *Segment) SetSeparatorColor(color Color) *Segment {
 	s.thinSeparatorColor = color
+	return s
+}
+
+// Separator returns the separator of the segment.
+func (s *Segment) separator() *Separator { return s.sep }
+
+// SetSeparator sets the separator of the segment.
+func (s *Segment) setSeparator(separator *Separator) *Segment {
+	s.sep = separator
 	return s
 }
 
@@ -56,8 +56,8 @@ func (s *Segment) WithSpaceAround() *Segment {
 func (s *Segment) WriteTo(w io.Writer) (int64, error) {
 	var wrote int64
 
-	if s.separator != nil {
-		nSeparator, errSeparator := s.separator.WriteTo(w)
+	if s.sep != nil {
+		nSeparator, errSeparator := s.sep.WriteTo(w)
 		wrote += nSeparator
 
 		if errSeparator != nil {

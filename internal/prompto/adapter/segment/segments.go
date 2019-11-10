@@ -3,8 +3,12 @@ package segment
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/krostar/prompto/internal/prompto/domain"
+	"github.com/krostar/prompto/pkg/pathx"
 )
 
 const (
@@ -40,6 +44,10 @@ var segmentsMapper = map[string]struct {
 		create:       segmentReadOnly,
 		configGetter: func(cfg Config) interface{} { return cfg.ReadOnly },
 	},
+	"git": {
+		create:       segmentGIT,
+		configGetter: func(cfg Config) interface{} { return cfg.GIT },
+	},
 }
 
 // Config stores the configuration for all segments provider.
@@ -50,6 +58,7 @@ type Config struct {
 	LastCMDExecStatus lastCmdExecStatusConfig `yaml:"last-cmd-exec-status"`
 	LastCMDExecTime   lastCmdExecTimeConfig   `yaml:"last-cmd-exec-time"`
 	ReadOnly          readOnlyConfig          `yaml:"read-only"`
+	GIT               gitConfig               `yaml:"git"`
 }
 
 // ProvideSegments provides segments based on configuration.
@@ -71,4 +80,18 @@ func ProvideSegments(segments []string, cfg Config) ([]domain.SegmentsProvider, 
 	}
 
 	return segmenters, nil
+}
+
+func replaceEnvironmentInPath(path string) string {
+	pathSplit := pathx.SplitPath(path)
+
+	for i, split := range pathSplit {
+		if strings.HasPrefix(split, "$") {
+			if p, isset := os.LookupEnv(split[1:]); isset && p != "" {
+				pathSplit[i] = p
+			}
+		}
+	}
+
+	return filepath.Join(pathSplit...)
 }

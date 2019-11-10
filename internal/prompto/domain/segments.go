@@ -37,7 +37,7 @@ func (ss Segments) setLeftSeparatorsToSegments(cfg SeparatorConfig) error {
 				break
 			}
 
-			s.SetSeparator(separator)
+			s.setSeparator(separator)
 		}
 
 		previous = s
@@ -62,7 +62,7 @@ func (ss Segments) setRightSeparatorsToSegments(cfg SeparatorConfig) error {
 				break
 			}
 
-			ss[i].SetSeparator(separator)
+			ss[i].setSeparator(separator)
 		}
 	}
 
