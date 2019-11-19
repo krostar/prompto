@@ -1,43 +1,32 @@
 package domain
 
+import (
+	"errors"
+
+	"github.com/krostar/prompto/pkg/color"
+)
+
 // Segments stores multiple segments of a prompt.
 type Segments []*Segment
 
-// SetSeparators sets the separator given a direction and a separator config.
-func (ss Segments) SetSeparators(d Direction, cfg SeparatorConfig) error {
-	var err error
-
-	switch d {
-	case DirectionLeft:
-		err = ss.setLeftSeparatorsToSegments(cfg)
-	case DirectionRight:
+// SetDirectionAndSeparators sets the separators given a direction and a separator config.
+func (ss Segments) SetDirectionAndSeparators(d Direction, cfg SeparatorConfig) error {
+	if d == DirectionRight {
 		ss.InverseOrder()
-		err = ss.setRightSeparatorsToSegments(cfg)
 	}
 
-	return err
-}
-
-func (ss Segments) setLeftSeparatorsToSegments(cfg SeparatorConfig) error {
 	var (
 		previous *Segment
 		err      error
 	)
 
 	for _, s := range ss {
-		if previous != nil {
-			var separator *Separator
+		s.setDirection(d)
 
-			separator, err = NewSeparator(
-				DirectionLeft, cfg,
-				previous.Style(), s.Style(),
-				s.SeparatorColor(),
-			)
-			if err != nil {
+		if previous != nil {
+			if err = ss.setSegmentSeparator(s, d, cfg, previous.Style()); err != nil {
 				break
 			}
-
-			s.setSeparator(separator)
 		}
 
 		previous = s
@@ -46,27 +35,28 @@ func (ss Segments) setLeftSeparatorsToSegments(cfg SeparatorConfig) error {
 	return err
 }
 
-func (ss Segments) setRightSeparatorsToSegments(cfg SeparatorConfig) error {
-	var err error
+func (ss Segments) setSegmentSeparator(s *Segment, d Direction, cfg SeparatorConfig, previousStyle color.Style) error {
+	var (
+		separator *Separator
+		err       error
+	)
 
-	for i := len(ss) - 1; i >= 0; i-- {
-		if i-1 >= 0 {
-			var separator *Separator
-
-			separator, err = NewSeparator(
-				DirectionRight, cfg,
-				ss[i].Style(), ss[i-1].Style(),
-				ss[i].SeparatorColor(),
-			)
-			if err != nil {
-				break
-			}
-
-			ss[i].setSeparator(separator)
-		}
+	switch d {
+	case DirectionLeft:
+		separator, err = NewSeparator(d, cfg, previousStyle, s.Style())
+	case DirectionRight:
+		separator, err = NewSeparator(d, cfg, s.Style(), previousStyle)
+	default:
+		err = errors.New("unknown direction")
 	}
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	s.setSeparator(*separator)
+
+	return nil
 }
 
 // InverseOrder reverses the order of the segments.

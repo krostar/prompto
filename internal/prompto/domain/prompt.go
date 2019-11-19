@@ -3,6 +3,7 @@ package domain
 
 import (
 	"fmt"
+	"github.com/krostar/prompto/pkg/color"
 	"io"
 )
 
@@ -22,11 +23,11 @@ func NewPrompt(segments Segments, d Direction, separatorConfig SeparatorConfig) 
 
 	finalSegment := segments[len(segments)-1]
 
-	if err := segments.SetSeparators(d, separatorConfig); err != nil {
+	if err := segments.SetDirectionAndSeparators(d, separatorConfig); err != nil {
 		return nil, fmt.Errorf("unable to set segments separators: %w", err)
 	}
 
-	finalSeparator, err := FinalSeparator(finalSegment.Style(), d, separatorConfig)
+	finalSeparator, err := FinalSeparator(d, separatorConfig, finalSegment.Style())
 	if err != nil {
 		return nil, fmt.Errorf("unable to get final separator: %w", err)
 	}
@@ -40,12 +41,12 @@ func NewPrompt(segments Segments, d Direction, separatorConfig SeparatorConfig) 
 
 // WriteTo implements io.WriterTo for Segments
 // to write all segment's content with style.
-func (p *Prompt) WriteTo(w io.Writer) (int64, error) {
+func (p *Prompt) WriteTo(colorizer color.Colorizer, w io.Writer) (int64, error) {
 	var wrote int64
 
 	if p.direction == DirectionRight && len(p.segments) > 0 {
 		w.Write([]byte(" ")) // nolint: errcheck, gosec
-		fwrote, err := p.finalSeparator.WriteTo(w)
+		fwrote, err := p.finalSeparator.WriteTo(colorizer, w)
 		wrote += fwrote + 1
 
 		if err != nil {
@@ -54,7 +55,7 @@ func (p *Prompt) WriteTo(w io.Writer) (int64, error) {
 	}
 
 	for _, s := range p.segments {
-		sWrote, err := s.WriteTo(w)
+		sWrote, err := s.WriteTo(colorizer, w)
 		wrote += sWrote
 
 		if err != nil {
@@ -63,7 +64,7 @@ func (p *Prompt) WriteTo(w io.Writer) (int64, error) {
 	}
 
 	if p.direction == DirectionLeft && len(p.segments) > 0 {
-		fwrote, err := p.finalSeparator.WriteTo(w)
+		fwrote, err := p.finalSeparator.WriteTo(colorizer, w)
 		wrote += fwrote + 1
 
 		if err != nil {

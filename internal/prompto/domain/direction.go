@@ -15,3 +15,14 @@ const (
 	// right to left.
 	DirectionRight
 )
+
+func (d Direction) String() string {
+	switch d {
+	case DirectionLeft:
+		return "left"
+	case DirectionRight:
+		return "right"
+	default:
+		return "unknown"
+	}
+}

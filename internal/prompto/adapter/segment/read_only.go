@@ -2,11 +2,14 @@ package segment
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 
-	"github.com/krostar/prompto/internal/prompto/domain"
+	"github.com/krostar/prompto/pkg/color"
 	"golang.org/x/sys/unix"
+
+	"github.com/krostar/prompto/internal/prompto/domain"
 )
 
 type readOnly struct {
@@ -15,10 +18,8 @@ type readOnly struct {
 }
 
 type readOnlyConfig struct {
-	Content string `yaml:"content"`
-
-	ColorForeground uint8 `yaml:"fg"`
-	ColorBackground uint8 `yaml:"bg"`
+	Content string       `yaml:"content"`
+	Color   color.Config `yaml:"color"`
 }
 
 func segmentReadOnly(rcfg interface{}) (domain.SegmentsProvider, error) {
@@ -27,14 +28,14 @@ func segmentReadOnly(rcfg interface{}) (domain.SegmentsProvider, error) {
 		return nil, errors.New("segmentReadOnly expected 1 arg of type readOnlyConfig")
 	}
 
-	pwd, isset := os.LookupEnv("PWD")
-	if !isset {
-		return nil, errors.New("pwd environment variable is not set")
+	wd, err := os.Getwd()
+	if err != nil {
+		return nil, fmt.Errorf("unable to get working directory: %w", err)
 	}
 
 	return &readOnly{
 		cfg: cfg,
-		cwd: filepath.Clean(pwd),
+		cwd: filepath.Clean(wd),
 	}, nil
 }
 
@@ -44,10 +45,7 @@ func (s *readOnly) ProvideSegments() (domain.Segments, error) {
 		segments = domain.Segments{
 			domain.NewSegment(s.cfg.Content).
 				WithSpaceAround().
-				SetStyle(domain.NewStyle(
-					domain.NewFGColor(s.cfg.ColorForeground),
-					domain.NewBGColor(s.cfg.ColorBackground),
-				)),
+				SetStyle(s.cfg.Color.ToStyle()),
 		}
 	}
 

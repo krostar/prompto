@@ -1,11 +1,16 @@
-package domain
+package color
 
 import (
 	"fmt"
 	"strconv"
 	"strings"
+)
 
-	"github.com/gookit/color"
+const (
+	ansiEscapeSequenceReset         = "\x1b[0m"
+	ansiEscapeSequenceStyleTemplate = "\x1b[%sm"
+	ansiForegroundColorTemplate     = "38;5;%d"
+	ansiBackgroundColorTemplate     = "48;5;%d"
 )
 
 // Style store a foreground and background color.
@@ -29,24 +34,19 @@ func NewStyle(fg, bg Color) Style {
 	return s
 }
 
-// Colorize behave has Sprintf, but also adds the style to the output.
-func (s Style) Colorize(format string, a ...interface{}) string {
-	return color.NewPrinter(s.String()).Sprintf(format, a...)
-}
-
-// String implements Stringer, and return the style ansi code.
-func (s Style) String() string {
-	var colors []uint8
+// Code returns the style ansi code.
+func (s Style) Code() string {
+	var code []string
 
 	if s[0].kind == ColorKindForeground {
-		colors = append(colors, s[0].value)
+		code = append(code, fmt.Sprintf(ansiForegroundColorTemplate, s[0].value))
 	}
 
 	if s[1].kind == ColorKindBackground {
-		colors = append(colors, s[1].value)
+		code = append(code, fmt.Sprintf(ansiBackgroundColorTemplate, s[1].value))
 	}
 
-	return color.S256(colors...).Code()
+	return strings.Join(code, ";")
 }
 
 // SplitToColors splits back a Style to its components: a
@@ -54,7 +54,7 @@ func (s Style) String() string {
 // a foreground or a background, an empty / invalid Color is
 // returned for this component instead.
 func (s Style) SplitToColors() (Color, Color, error) {
-	codes := strings.Split(s.String(), ";")
+	codes := strings.Split(s.Code(), ";")
 	toUint8 := func(s string) (uint8, error) {
 		u, err := strconv.ParseUint(s, 10, 8)
 		if err != nil {

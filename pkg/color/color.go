@@ -1,9 +1,10 @@
-package domain
+package color
 
 // Color aggregates both 8-bit color and the kind where the
 // color applies. Value must be a 8-bit 256 mode color.
 // See https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit
-// to get more details on the value possibilities.
+// or https://jonasjacek.github.io/colors/ to get more details
+// on the value possibilities.
 type Color struct {
 	value uint8
 	kind  ColorKind

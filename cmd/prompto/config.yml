@@ -1,76 +1,92 @@
 ---
 
 left-segments:
+  - "custom-lbc"
+  - "last-cmd-exec-time"
+  - "last-cmd-exec-status"
+  - "hi"
+
+right-segments:
+  - "k8s"
   - "read-only"
   - "cwd"
   - "git"
 
-right-segments:
-  - "last-cmd-exec-time"
-  - "last-cmd-exec-status"
-
 separator:
-  content-left: "\uE0B0"
-  content-left-thin: "\uE0B1"
-  content-right: "\uE0B2"
-  content-right-thin: "\uE0B3"
+  thin-fg-color:
+    254: 248
+    236: 244
+    25: 32
+    166: 208
+    88: 52
+  content:
+    left: "\uE0B0"
+    left-thin: "\uE0B1"
+    right: "\uE0B2"
+    right-thin: "\uE0B3"
 
 segments:
+  hi:
+    color: {fg: 250, bg: 236}
+    content: "$"
   cwd:
-    fg: 250
-    bg: 236
-    separator-fg: 244
+    color: {fg: 250, bg: 236}
     special:
       -last-:
-        fg: 254
-        bg: 236
-        separator-fg: 244
+        color: {fg: 254, bg: 236}
       "$HOME":
-        fg: 254
-        bg: 236
-        separator-fg: 244
+        color: {fg: 254, bg: 236}
         replace-with: "~"
       "$GOPATH":
-        fg: 254
-        bg: 25
-        separator-fg: 32
+        color: {fg: 254, bg: 25}
         replace-with: "$GOPATH"
       "$GOPATH/src/github.mpi-internal.com/leboncoin/go":
-        fg: 15
-        bg: 166
-        separator-fg: 172
+        color: {fg: 15, bg: 166}
         replace-with: "lbc/go"
       "$HOME/Work/Perso/go":
-        fg: 254
-        bg: 25
-        separator-fg: 32
+        color: {fg: 254, bg: 25}
         replace-with: "go"
   last-cmd-exec-status:
     success:
       hide: true
     failure:
-      fg: 250
-      bg: 52
+      color: {fg: 254, bg: 88}
   last-cmd-exec-time:
-    fg: 250
-    bg: 236
+    color: {fg: 254, bg: 236}
     treshold-display: "1s"
     treshold-truncate:
       "1s": "10ms"
       "1m": "100ms"
       "1h": "10s"
   read-only:
-    fg: 250
-    bg: 52
+    color: {fg: 254, bg: 88}
     content: "\uE0A2"
   git:
-    # ignore:
-      # - $GOPATH/src/github.mpi-internal.com/leboncoin/go
+    ignore:
+    lite:
+      - "$GOPATH/src/github.mpi-internal.com/leboncoin/go"
     clean:
-      bg: 106
-      fg: 15
+      color: {fg: 254, bg: 28}
     changes:
-      bg: 167
-      fg: 15
+      color: {fg: 254, bg: 88}
+  k8s:
+    config-file:
+    color: {fg: 63, bg: 254}
+    display-if: "lbc-k8s signed-in"
+    special:
+      '^(?:prod|staging|qa\d)(?P<CLUSTER>[a-zA-Z0-9\-_]+)$':
+        '^prod-(?P<TEAM>[a-zA-Z0-9\-_]+)$':
+          color: {fg: 254, bg: 88}
+          replace-with: "{CLUSTER}/prod/{TEAM}"
+        '^preprod-(?P<TEAM>[a-zA-Z0-9\-_]+)$':
+          replace-with: "{CLUSTER}/staging/{TEAM}"
+        '^(?P<QA>qa\d+)-(?P<TEAM>[a-zA-Z0-9\-_]+)$':
+          replace-with: "{CLUSTER}/{QA}/{TEAM}"
+  custom:
+    lbc:
+      exec: "lbc-prompt"
+      status:
+        0:
+          color: {fg: 15, bg: 166}
 
 ...

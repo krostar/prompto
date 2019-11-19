@@ -4,6 +4,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/krostar/prompto/pkg/color"
+
 	"github.com/krostar/prompto/internal/prompto/domain"
 )
 
@@ -12,11 +14,9 @@ type lastCmdExecTime struct {
 }
 
 type lastCmdExecTimeConfig struct {
-	DurationNS uint `yaml:"-"`
+	DurationNS uint `json:"-" yaml:"-"`
 
-	ColorForeground uint8 `yaml:"fg"`
-	ColorBackground uint8 `yaml:"bg"`
-
+	Color            color.Config                    `yaml:"color"`
 	TresholdDisplay  time.Duration                   `yaml:"treshold-display"`
 	TresholdTruncate map[time.Duration]time.Duration `yaml:"treshold-truncate"`
 }
@@ -48,9 +48,6 @@ func (s *lastCmdExecTime) ProvideSegments() (domain.Segments, error) {
 	return domain.Segments{
 		domain.NewSegment(d.String()).
 			WithSpaceAround().
-			SetStyle(domain.NewStyle(
-				domain.NewFGColor(s.cfg.ColorForeground),
-				domain.NewBGColor(s.cfg.ColorBackground),
-			)),
+			SetStyle(s.cfg.Color.ToStyle()),
 	}, nil
 }

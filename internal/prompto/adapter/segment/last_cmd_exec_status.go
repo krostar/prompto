@@ -4,6 +4,8 @@ import (
 	"errors"
 	"strconv"
 
+	"github.com/krostar/prompto/pkg/color"
+
 	"github.com/krostar/prompto/internal/prompto/domain"
 )
 
@@ -12,17 +14,16 @@ type lastCmdExecStatus struct {
 }
 
 type lastCmdExecStatusConfig struct {
-	StatusCode uint `yaml:"-"`
+	StatusCode uint `json:"-" yaml:"-"`
 
 	Success lastCmdExecStatusStateConfig `yaml:"success"`
 	Failure lastCmdExecStatusStateConfig `yaml:"failure"`
 }
 
 type lastCmdExecStatusStateConfig struct {
-	ReplaceWith     string `yaml:"replace-with"`
-	Hide            bool   `yaml:"hide"`
-	ColorBackground uint8  `yaml:"bg"`
-	ColorForeground uint8  `yaml:"fg"`
+	ReplaceWith string       `yaml:"replace-with"`
+	Hide        bool         `yaml:"hide"`
+	Color       color.Config `yaml:"color"`
 }
 
 func segmentLastCmdExecStatus(rcfg interface{}) (domain.SegmentsProvider, error) {
@@ -55,10 +56,7 @@ func (s *lastCmdExecStatus) ProvideSegments() (domain.Segments, error) {
 
 	return domain.Segments{
 		domain.NewSegment(content).
-			WithSpaceAround().
-			SetStyle(domain.NewStyle(
-				domain.NewFGColor(cfg.ColorForeground),
-				domain.NewBGColor(cfg.ColorBackground),
-			)),
+			SetStyle(cfg.Color.ToStyle()).
+			WithSpaceAround(),
 	}, nil
 }

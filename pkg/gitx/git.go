@@ -10,7 +10,9 @@ func IsGITBinaryInstalled() (bool, error) {
 		if exitErr, ok := err.(*exec.ExitError); ok && exitErr.ExitCode() != 0 {
 			return false, nil
 		}
+
 		return false, fmt.Errorf("command execution failed %q: %w", "command -v git", err)
 	}
+
 	return true, nil
 }

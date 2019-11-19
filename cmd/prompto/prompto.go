@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"runtime/debug"
 
 	"github.com/krostar/clix"
 
@@ -11,11 +12,19 @@ import (
 )
 
 func main() {
-	cmd := clix.Command(clix.WithLogger(
-		cli.CommandWritePrompt,
-		clix.LoggerWithAppName(app.Name()),
-		clix.LoggerWithVersion(app.Version()),
-	))
+	debug.SetGCPercent(-1)
+
+	cmd := clix.
+		Command(clix.WithLogger(
+			cli.CommandWritePrompt,
+			clix.LoggerWithAppName(app.Name()),
+			clix.LoggerWithVersion(app.Version()),
+		)).
+		SubCommand(clix.
+			Command(cli.CommandConfig).
+			SubCommand(cli.CommandConfigCompile).
+			SubCommand(cli.CommandConfigValidate).Build(),
+		)
 
 	ctx, cancel := clix.NewContextCancelableBySignal(os.Interrupt, os.Kill)
 	defer cancel()

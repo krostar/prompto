@@ -3,119 +3,73 @@ package gitx
 import (
 	"fmt"
 	"os/exec"
-	"path/filepath"
-
-	"gopkg.in/src-d/go-billy.v4/helper/chroot"
-	gitlib "gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing"
-	"gopkg.in/src-d/go-git.v4/storage/filesystem"
+	"strings"
 )
 
 type Repository struct {
-	repo *gitlib.Repository
+	path   string
+	branch string
+	remote string
+	hasWip bool
 }
 
 func LocalRepository() (*Repository, error) {
-	gitInstalled, err := IsGITBinaryInstalled()
+	out, err := exec.Command("bash", "-c", `
+git rev-parse --show-toplevel ;
+git status --porcelain=v2 --ignore-submodules --branch -z;
+`).CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("unable to check if git is installed: %w", err)
-	}
-	if !gitInstalled {
-		return nil, fmt.Errorf("git is not installed but is required")
+		return nil, ErrRepositoryDoesNotExists
 	}
 
-	repo, err := gitlib.PlainOpenWithOptions(".", &gitlib.PlainOpenOptions{
-		DetectDotGit: true,
-	})
-	if err != nil {
-		if err == gitlib.ErrRepositoryNotExists {
-			return nil, ErrRepositoryDoesNotExists
+	lines := strings.Split(string(out), "\n")
+	if len(lines) != 2 {
+		return nil, fmt.Errorf("unable to parse git command output %q: %w", out, err)
+	}
+
+	var repo Repository
+
+	repo.path = lines[0]
+	status := strings.Split(lines[1], "\000")
+
+	for _, data := range status[:len(status)-1] {
+		if data[0] != '#' {
+			repo.hasWip = true
+			break
 		}
-		return nil, fmt.Errorf("unable to open repository: %w", err)
+
+		if strings.HasPrefix(data, "# branch.head ") {
+			repo.branch = data[14:]
+			continue
+		}
+
+		if strings.HasPrefix(data, "# branch.upstream ") {
+			repo.remote = data[18:]
+			continue
+		}
 	}
 
-	return &Repository{
-		repo: repo,
-	}, nil
+	return &repo, nil
 }
 
 func (git *Repository) HeadReference() (string, error) {
-	head, err := git.repo.Head()
-	if err != nil {
-		return "", fmt.Errorf("unable to get head: %w", err)
-	}
-	return head.Name().Short(), nil
+	return git.branch, nil
 }
 
 func (git *Repository) AbsoluteLocation() (string, error) {
-	rawFS, ok := git.repo.Storer.(*filesystem.Storage)
-	if !ok {
-		return "", fmt.Errorf("repository storage is not filesystem.Storage")
-	}
-
-	fs, ok := rawFS.Filesystem().(*chroot.ChrootHelper)
-	if !ok {
-		return "", fmt.Errorf("filesystem is not chroot.ChrootHelper")
-	}
-
-	repoPath, err := filepath.Abs(fs.Root())
-	if err != nil {
-		return "", fmt.Errorf("unable to get absolute path: %w", err)
-	}
-
-	return filepath.Dir(repoPath), nil
+	return git.path, nil
 }
 
-func (git *Repository) IsBranchSyncedWithRemote(branchName string) (bool, error) {
-	ref, err := git.repo.Reference(plumbing.NewBranchReferenceName(branchName), true)
-	if err != nil {
-		return false, fmt.Errorf("unable to reference branch %q: %w", branchName, err)
-	}
+func (git *Repository) IsHeadSyncedWithRemote() (bool, error) {
+	diff := fmt.Sprintf("git diff --quiet %s..%s --", git.branch, git.remote)
 
-	remotes, err := git.getRemotesForRef(ref.Name())
-	if err != nil {
-		return false, fmt.Errorf("unable to get remote reference for %q: %w", ref.String(), err)
-	}
-
-	if len(remotes) == 0 {
+	if err := exec.Command("bash", "-c", diff).Run(); err != nil { // nolint: gosec
 		return false, nil
 	}
 
-	refHash := ref.Hash()
-	for _, remote := range remotes {
-		if remote != refHash {
-			return false, nil
-		}
-	}
-	return true, nil
+	return !git.hasWip, nil
 }
 
 func (git *Repository) HasWIP() (bool, error) {
-	if err := exec.Command("git", "diff-index", "--quiet", "HEAD").Run(); err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok && exitErr.ExitCode() == 1 {
-			return true, nil
-		}
-	}
-	return false, nil
-}
-
-func (git *Repository) getRemotesForRef(refName plumbing.ReferenceName) ([]plumbing.Hash, error) {
-	var remoteRefs []plumbing.Hash
-
-	remotes, err := git.repo.Remotes()
-	if err != nil {
-		return nil, fmt.Errorf("unable to list remotes: %w", err)
-	}
-
-	for _, remote := range remotes {
-		remoteRefName := plumbing.Revision(remote.Config().Name + "/" + refName.Short())
-		remoteRef, err := git.repo.ResolveRevision(remoteRefName)
-		if err != nil && err != plumbing.ErrReferenceNotFound {
-			return nil, fmt.Errorf("unable to get remote revision named %q: %w", remoteRefName, err)
-		}
-		remoteRefs = append(remoteRefs, *remoteRef)
-		break
-	}
-
-	return remoteRefs, nil
+	return git.hasWip, nil
 }

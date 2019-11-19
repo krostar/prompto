@@ -2,62 +2,98 @@ package domain
 
 import (
 	"fmt"
+	"github.com/krostar/prompto/pkg/color"
 	"io"
+	"strings"
 )
 
 // Segment is a part of a prompt. It is composed
 // of a content, a style, and a separator.
 type Segment struct {
-	content            string
-	style              Style
-	thinSeparatorColor Color
+	contents    []string
+	style       color.Style
+	spaceBefore bool
+	spaceAfter  bool
 
-	sep *Separator
+	direction Direction
+	separator *Separator
 }
 
 // NewSegment creates a new segment.
-func NewSegment(content string) *Segment { return &Segment{content: content} }
+func NewSegment(contents ...string) *Segment {
+	return &Segment{contents: contents}
+}
 
 // Style returns the style of the segment.
-func (s *Segment) Style() Style { return s.style }
+func (s *Segment) Style() color.Style { return s.style }
 
 // SetStyle sets the style of the segment.
-func (s *Segment) SetStyle(style Style) *Segment {
+func (s *Segment) SetStyle(style color.Style) *Segment {
 	s.style = style
-	return s
-}
-
-// SeparatorColor returns the separator color of the segment.
-func (s *Segment) SeparatorColor() Color { return s.thinSeparatorColor }
-
-// SetSeparatorColor sets the separator color of the segment.
-func (s *Segment) SetSeparatorColor(color Color) *Segment {
-	s.thinSeparatorColor = color
-	return s
-}
-
-// Separator returns the separator of the segment.
-func (s *Segment) separator() *Separator { return s.sep }
-
-// SetSeparator sets the separator of the segment.
-func (s *Segment) setSeparator(separator *Separator) *Segment {
-	s.sep = separator
 	return s
 }
 
 // WithSpaceAround adds some space around segment.
 func (s *Segment) WithSpaceAround() *Segment {
-	s.content = " " + s.content + " "
+	s.spaceBefore = true
+	s.spaceAfter = true
+
 	return s
+}
+
+func (s *Segment) WithSpaceBefore() *Segment {
+	s.spaceBefore = true
+	return s
+}
+
+func (s *Segment) WithSpaceAfter() *Segment {
+	s.spaceAfter = true
+	return s
+}
+
+func (s *Segment) setDirection(d Direction) {
+	s.direction = d
+}
+
+func (s *Segment) setSeparator(sep Separator) {
+	s.separator = &sep
+}
+
+func (s *Segment) contentWithSpace() string {
+	if s.direction == DirectionRight {
+		// swap content order
+		last := len(s.contents) - 1
+
+		for i := 0; i < len(s.contents)/2; i++ {
+			s.contents[i], s.contents[last-i] = s.contents[last-i], s.contents[i]
+		}
+
+		if !s.spaceBefore || !s.spaceAfter {
+			s.spaceBefore = !s.spaceBefore
+			s.spaceAfter = !s.spaceAfter
+		}
+	}
+
+	content := strings.Join(s.contents, " ")
+
+	if s.spaceBefore {
+		content = " " + content
+	}
+
+	if s.spaceAfter {
+		content += " "
+	}
+
+	return content
 }
 
 // WriteTo implements io.WriterTo for Segment
 // to write segment's content with provided style.
-func (s *Segment) WriteTo(w io.Writer) (int64, error) {
+func (s *Segment) WriteTo(colorizer color.Colorizer, w io.Writer) (int64, error) {
 	var wrote int64
 
-	if s.sep != nil {
-		nSeparator, errSeparator := s.sep.WriteTo(w)
+	if s.separator != nil {
+		nSeparator, errSeparator := s.separator.WriteTo(colorizer, w)
 		wrote += nSeparator
 
 		if errSeparator != nil {
@@ -65,7 +101,7 @@ func (s *Segment) WriteTo(w io.Writer) (int64, error) {
 		}
 	}
 
-	nSegment, errSegment := w.Write([]byte(s.style.Colorize(s.content)))
+	nSegment, errSegment := w.Write([]byte(colorizer.Colorize(s.style, s.contentWithSpace())))
 	wrote += int64(nSegment)
 
 	if errSegment != nil {

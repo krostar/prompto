@@ -4,30 +4,31 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/krostar/prompto/pkg/color"
 	"github.com/krostar/prompto/pkg/pathx"
 )
 
 type cwdConfig struct {
-	ColorForeground          uint8 `yaml:"fg"`
-	ColorBackground          uint8 `yaml:"bg"`
-	SeparatorForegroundColor uint8 `yaml:"separator-fg"`
+	Color   color.Config                 `yaml:"color"`
+	Special map[string]*cwdConfigSpecial `yaml:"special"`
+}
 
-	Special map[string]cwdConfigSpecial `yaml:"special"`
+func (c *cwdConfig) setDefaultColorToSpecials() {
+	for _, special := range c.Special {
+		special.Color.SetDefaultColor(c.Color)
+	}
 }
 
 type cwdConfigSpecial struct {
 	depth int
 	path  string
 
-	ColorForeground     uint8 `yaml:"fg"`
-	ColorBackground     uint8 `yaml:"bg"`
-	SeparatorForeground uint8 `yaml:"separator-fg"`
-
-	ReplaceWith string `yaml:"replace-with"`
+	Color       color.Config `yaml:"color"`
+	ReplaceWith string       `yaml:"replace-with"`
 }
 
-func (c *cwdConfig) getUsefulSpecial(cwd string) []cwdConfigSpecial {
-	var specials []cwdConfigSpecial
+func (c *cwdConfig) getUsefulSpecial(cwd string) []*cwdConfigSpecial {
+	var specials []*cwdConfigSpecial
 
 	for path, special := range c.Special {
 		if path == cwdSpecialLast { // this one's special, we handle it manually
