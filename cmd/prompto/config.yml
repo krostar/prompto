@@ -64,7 +64,6 @@ segments:
   git:
     ignore:
     lite:
-      - "$GOPATH/src/github.mpi-internal.com/leboncoin/go"
     clean:
       color: {fg: 254, bg: 28}
     changes:

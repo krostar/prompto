@@ -20,8 +20,6 @@ A fast, modulable and extremely configurable prompt for any shells.
     -   ~~brew _(available soon)_~~
     -   ~~aur _(available soon)_~~
 
-## Configuration
-
 ### Bash
 
 ```bash
@@ -70,8 +68,8 @@ function _prompt() {
         unset prompt_command_started_at
     fi
 
-    PROMPT="$(/Users/alexis.destrez/Work/Perso/go/prompto/build/bin/prompto --left --shell zsh -s $last_cmd_status -d $last_cmd_duration)"
-    RPROMPT="$(/Users/alexis.destrez/Work/Perso/go/prompto/build/bin/prompto --right --shell zsh)"
+    PROMPT="$(prompto/build/bin/prompto --left --shell zsh -s $last_cmd_status -d $last_cmd_duration)"
+    RPROMPT="$(prompto/build/bin/prompto --right --shell zsh)"
     ZLE_RPROMPT_INDENT=0
 
     export PROMPT RPROMPT ZLE_RPROMPT_INDENT
@@ -96,11 +94,11 @@ fi
 ```fish
 function fish_prompt
     set -l exitcode $status
-    set duration (math "$CMD_DURATION * 1000000")
-    $HOME/Work/Perso/go/prompto/build/bin/prompto --left -d $duration -s $exitcode
+    set -l duration (math "$CMD_DURATION * 1000000")
+    prompto --left -d $duration -s $exitcode
 end
 
 function fish_right_prompt
-    $HOME/Work/Perso/go/prompto/build/bin/prompto --right
+    prompto --right
 end
 ```
