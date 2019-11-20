@@ -25,6 +25,10 @@ func segmentStub(rcfg interface{}) (domain.SegmentsProvider, error) {
 	return &stub{cfg: cfg}, nil
 }
 
+func (s *stub) SegmentName() string {
+	return "stub"
+}
+
 func (s *stub) ProvideSegments() (domain.Segments, error) {
 	return s.cfg.Segments, s.cfg.Error
 }

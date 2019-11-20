@@ -3,8 +3,9 @@ package domain
 
 import (
 	"fmt"
-	"github.com/krostar/prompto/pkg/color"
 	"io"
+
+	"github.com/krostar/prompto/pkg/color"
 )
 
 // Prompt stores and manipulate prompt attributes.
@@ -23,7 +24,7 @@ func NewPrompt(segments Segments, d Direction, separatorConfig SeparatorConfig) 
 
 	finalSegment := segments[len(segments)-1]
 
-	if err := segments.SetDirectionAndSeparators(d, separatorConfig); err != nil {
+	if err := segments.ApplyDirectionAndSeparators(d, separatorConfig); err != nil {
 		return nil, fmt.Errorf("unable to set segments separators: %w", err)
 	}
 

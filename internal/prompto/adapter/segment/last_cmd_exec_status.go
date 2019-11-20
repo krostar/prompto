@@ -9,36 +9,40 @@ import (
 	"github.com/krostar/prompto/internal/prompto/domain"
 )
 
-type lastCmdExecStatus struct {
-	cfg lastCmdExecStatusConfig
+type lastCMDExecStatus struct {
+	cfg lastCMDExecStatusConfig
 }
 
-type lastCmdExecStatusConfig struct {
+type lastCMDExecStatusConfig struct {
 	StatusCode uint `json:"-" yaml:"-"`
 
-	Success lastCmdExecStatusStateConfig `yaml:"success"`
-	Failure lastCmdExecStatusStateConfig `yaml:"failure"`
+	Success lastCMDExecStatusStateConfig `yaml:"success"`
+	Failure lastCMDExecStatusStateConfig `yaml:"failure"`
 }
 
-type lastCmdExecStatusStateConfig struct {
+type lastCMDExecStatusStateConfig struct {
 	ReplaceWith string       `yaml:"replace-with"`
 	Hide        bool         `yaml:"hide"`
 	Color       color.Config `yaml:"color"`
 }
 
-func segmentLastCmdExecStatus(rcfg interface{}) (domain.SegmentsProvider, error) {
-	cfg, isArgConfig := rcfg.(lastCmdExecStatusConfig)
+func segmentLastCMDExecStatus(rcfg interface{}) (domain.SegmentsProvider, error) {
+	cfg, isArgConfig := rcfg.(lastCMDExecStatusConfig)
 	if !isArgConfig {
-		return nil, errors.New("segmentLastCmdExecStatus expected 1 arg of type lastCmdExecStatusConfig")
+		return nil, errors.New("segmentLastCMDExecStatus expected 1 arg of type lastCMDExecStatusConfig")
 	}
 
-	return &lastCmdExecStatus{
+	return &lastCMDExecStatus{
 		cfg: cfg,
 	}, nil
 }
 
-func (s *lastCmdExecStatus) ProvideSegments() (domain.Segments, error) {
-	var cfg lastCmdExecStatusStateConfig
+func (s *lastCMDExecStatus) SegmentName() string {
+	return "last command exec status"
+}
+
+func (s *lastCMDExecStatus) ProvideSegments() (domain.Segments, error) {
+	var cfg lastCMDExecStatusStateConfig
 	if s.cfg.StatusCode == 0 {
 		cfg = s.cfg.Success
 	} else {

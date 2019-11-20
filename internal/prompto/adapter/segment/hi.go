@@ -26,6 +26,10 @@ func segmentHi(rcfg interface{}) (domain.SegmentsProvider, error) {
 	return &hi{cfg: cfg}, nil
 }
 
+func (s *hi) SegmentName() string {
+	return "hi"
+}
+
 func (s *hi) ProvideSegments() (domain.Segments, error) {
 	return domain.Segments{
 		domain.

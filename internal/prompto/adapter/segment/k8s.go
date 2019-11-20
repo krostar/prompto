@@ -67,6 +67,10 @@ func segmentK8S(rcfg interface{}) (domain.SegmentsProvider, error) {
 	}, nil
 }
 
+func (s *k8s) SegmentName() string {
+	return "k8s"
+}
+
 func (s *k8s) ProvideSegments() (domain.Segments, error) {
 	current, exists := s.k8sConfig.Contexts[s.k8sConfig.CurrentContext]
 	if !exists {

@@ -39,6 +39,10 @@ func segmentGIT(rcfg interface{}) (domain.SegmentsProvider, error) {
 	return &git{cfg: cfg}, nil
 }
 
+func (s *git) SegmentName() string {
+	return "git"
+}
+
 func (s *git) ProvideSegments() (domain.Segments, error) {
 	repo, lite, err := s.getRepository()
 	if err != nil {

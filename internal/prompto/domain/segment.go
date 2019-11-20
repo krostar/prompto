@@ -2,21 +2,24 @@ package domain
 
 import (
 	"fmt"
-	"github.com/krostar/prompto/pkg/color"
 	"io"
 	"strings"
+
+	"github.com/krostar/prompto/pkg/color"
 )
 
 // Segment is a part of a prompt. It is composed
 // of a content, a style, and a separator.
 type Segment struct {
-	contents    []string
-	style       color.Style
+	direction Direction
+	contents  []string
+	style     color.Style
+
 	spaceBefore bool
 	spaceAfter  bool
 
-	direction Direction
-	separator *Separator
+	separatorDisabledForNextSegment bool
+	separator                       *Separator
 }
 
 // NewSegment creates a new segment.
@@ -48,6 +51,11 @@ func (s *Segment) WithSpaceBefore() *Segment {
 
 func (s *Segment) WithSpaceAfter() *Segment {
 	s.spaceAfter = true
+	return s
+}
+
+func (s *Segment) DisableNextSegmentSeparator() *Segment {
+	s.separatorDisabledForNextSegment = true
 	return s
 }
 

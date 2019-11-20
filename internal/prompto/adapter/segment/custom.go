@@ -34,6 +34,10 @@ func segmentCustom(rcfg interface{}) (domain.SegmentsProvider, error) {
 	}, nil
 }
 
+func (s *custom) SegmentName() string {
+	return "custom"
+}
+
 func (s *custom) ProvideSegments() (domain.Segments, error) {
 	stdout, _, status, err := execCommand(s.cfg.Exec)
 	if err != nil {

@@ -9,8 +9,8 @@ import (
 // Segments stores multiple segments of a prompt.
 type Segments []*Segment
 
-// SetDirectionAndSeparators sets the separators given a direction and a separator config.
-func (ss Segments) SetDirectionAndSeparators(d Direction, cfg SeparatorConfig) error {
+// ApplyDirectionAndSeparators sets the separators given a direction and a separator config.
+func (ss Segments) ApplyDirectionAndSeparators(d Direction, cfg SeparatorConfig) error {
 	if d == DirectionRight {
 		ss.InverseOrder()
 	}
@@ -23,7 +23,7 @@ func (ss Segments) SetDirectionAndSeparators(d Direction, cfg SeparatorConfig) e
 	for _, s := range ss {
 		s.setDirection(d)
 
-		if previous != nil {
+		if previous != nil && !previous.separatorDisabledForNextSegment {
 			if err = ss.setSegmentSeparator(s, d, cfg, previous.Style()); err != nil {
 				break
 			}
@@ -66,9 +66,4 @@ func (ss Segments) InverseOrder() {
 	for i := 0; i < len(ss)/2; i++ {
 		ss[i], ss[last-i] = ss[last-i], ss[i]
 	}
-}
-
-// SegmentsProvider defines how to provide segments.
-type SegmentsProvider interface {
-	ProvideSegments() (Segments, error)
 }

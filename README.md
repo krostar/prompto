@@ -102,3 +102,17 @@ function fish_right_prompt
     prompto --right
 end
 ```
+
+## Configuration
+
+// TODO
+
+## Limitation
+
+// TODO
+
+-   multiline prompt
+
+## Motivation
+
+// TODO

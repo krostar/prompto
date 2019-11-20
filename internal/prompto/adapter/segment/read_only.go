@@ -39,6 +39,10 @@ func segmentReadOnly(rcfg interface{}) (domain.SegmentsProvider, error) {
 	}, nil
 }
 
+func (s *readOnly) SegmentName() string {
+	return "read-only"
+}
+
 func (s *readOnly) ProvideSegments() (domain.Segments, error) {
 	var segments domain.Segments
 	if unix.Access(s.cwd, unix.W_OK) != nil {

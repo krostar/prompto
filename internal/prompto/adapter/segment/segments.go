@@ -18,6 +18,7 @@ const (
 	// SegmentNameUnknown defines the segment name to use for failure.
 	SegmentNameUnknown = ""
 	SegmentNameCustom  = "custom-"
+	SegmentNameNewline = "newline"
 	// SegmentNameStub defines the segment name to use for stub.
 	SegmentNameStub = "-stub-"
 )
@@ -31,6 +32,10 @@ var segmentsMapper = map[string]struct {
 	SegmentNameStub: {
 		create:       segmentStub,
 		configGetter: func(cfg Config) interface{} { return cfg.Stub },
+	},
+	SegmentNameNewline: {
+		create:       segmentNewline,
+		configGetter: func(cfg Config) interface{} { return nil },
 	},
 	"cwd": {
 		create:       segmentCWD,
@@ -49,11 +54,11 @@ var segmentsMapper = map[string]struct {
 		configGetter: func(cfg Config) interface{} { return cfg.K8S },
 	},
 	"last-cmd-exec-status": {
-		create:       segmentLastCmdExecStatus,
+		create:       segmentLastCMDExecStatus,
 		configGetter: func(cfg Config) interface{} { return cfg.LastCMDExecStatus },
 	},
 	"last-cmd-exec-time": {
-		create:       segmentLastCmdExecTime,
+		create:       segmentLastCMDExecTime,
 		configGetter: func(cfg Config) interface{} { return cfg.LastCMDExecTime },
 	},
 	"read-only": {
@@ -71,8 +76,8 @@ type Config struct {
 	GIT               gitConfig               `yaml:"git"`
 	Hi                hiConfig                `yaml:"hi"`
 	K8S               k8sConfig               `yaml:"k8s"`
-	LastCMDExecStatus lastCmdExecStatusConfig `yaml:"last-cmd-exec-status"`
-	LastCMDExecTime   lastCmdExecTimeConfig   `yaml:"last-cmd-exec-time"`
+	LastCMDExecStatus lastCMDExecStatusConfig `yaml:"last-cmd-exec-status"`
+	LastCMDExecTime   lastCMDExecTimeConfig   `yaml:"last-cmd-exec-time"`
 	ReadOnly          readOnlyConfig          `yaml:"read-only"`
 }
 

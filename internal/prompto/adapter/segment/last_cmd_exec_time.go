@@ -9,11 +9,11 @@ import (
 	"github.com/krostar/prompto/internal/prompto/domain"
 )
 
-type lastCmdExecTime struct {
-	cfg lastCmdExecTimeConfig
+type lastCMDExecTime struct {
+	cfg lastCMDExecTimeConfig
 }
 
-type lastCmdExecTimeConfig struct {
+type lastCMDExecTimeConfig struct {
 	DurationNS uint `json:"-" yaml:"-"`
 
 	Color            color.Config                    `yaml:"color"`
@@ -21,18 +21,22 @@ type lastCmdExecTimeConfig struct {
 	TresholdTruncate map[time.Duration]time.Duration `yaml:"treshold-truncate"`
 }
 
-func segmentLastCmdExecTime(rcfg interface{}) (domain.SegmentsProvider, error) {
-	cfg, isArgConfig := rcfg.(lastCmdExecTimeConfig)
+func segmentLastCMDExecTime(rcfg interface{}) (domain.SegmentsProvider, error) {
+	cfg, isArgConfig := rcfg.(lastCMDExecTimeConfig)
 	if !isArgConfig {
-		return nil, errors.New("segmentLastCmdExecTime expected 1 arg of type lastCmdExecTimeConfig")
+		return nil, errors.New("segmentLastCMDExecTime expected 1 arg of type lastCMDExecTimeConfig")
 	}
 
-	return &lastCmdExecTime{
+	return &lastCMDExecTime{
 		cfg: cfg,
 	}, nil
 }
 
-func (s *lastCmdExecTime) ProvideSegments() (domain.Segments, error) {
+func (s *lastCMDExecTime) SegmentName() string {
+	return "last command exec time"
+}
+
+func (s *lastCMDExecTime) ProvideSegments() (domain.Segments, error) {
 	d := time.Duration(s.cfg.DurationNS)
 
 	if d < s.cfg.TresholdDisplay {

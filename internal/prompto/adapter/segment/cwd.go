@@ -44,6 +44,10 @@ func segmentCWD(rcfg interface{}) (domain.SegmentsProvider, error) {
 	}, nil
 }
 
+func (s *cwd) SegmentName() string {
+	return "cwd"
+}
+
 func (s *cwd) ProvideSegments() (domain.Segments, error) {
 	var segments domain.Segments
 

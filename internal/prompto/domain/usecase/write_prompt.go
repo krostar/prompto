@@ -44,7 +44,7 @@ func (p *promptWriter) WritePrompts(ctx context.Context, reqs ...PromptCreationR
 
 	for _, req := range reqs {
 		if err := p.writePrompt(ctx, req); err != nil {
-			multierr.Combine(errs, fmt.Errorf("unable to write %s prompt: %w", req.Direction, err))
+			errs = multierr.Combine(errs, fmt.Errorf("unable to write %s prompt: %w", req.Direction, err))
 		}
 	}
 
@@ -60,18 +60,25 @@ func (p *promptWriter) writePrompt(ctx context.Context, req PromptCreationReques
 		mutex       sync.Mutex
 	)
 
-	wg.Add(len(req.SegmentsProvider))
-
 	for i, segmenter := range req.SegmentsProvider {
 		segmenter := segmenter
 
+		if domain.IsSegmentsProviderDisabledForDirection(req.Direction, segmenter) {
+			segmentsErr = p.appendError(&mutex, segmentsErr, fmt.Errorf(
+				"segment %s is not available for direction %s",
+				segmenter.SegmentName(), req.Direction,
+			))
+			break
+		}
+		wg.Add(1)
 		go func(index int) {
 			defer wg.Done()
 			s, err := segmenter.ProvideSegments()
 			if err != nil {
-				mutex.Lock()
-				segmentsErr = multierr.Combine(segmentsErr, fmt.Errorf("unable to get prompt segment: %w", err))
-				mutex.Unlock()
+				segmentsErr = p.appendError(&mutex, segmentsErr, fmt.Errorf(
+					"unable to get prompt segment %s: %w",
+					segmenter.SegmentName(), err,
+				))
 				return
 			}
 			parallelSegments[index] = s
@@ -79,6 +86,10 @@ func (p *promptWriter) writePrompt(ctx context.Context, req PromptCreationReques
 	}
 
 	wg.Wait()
+
+	if segmentsErr != nil {
+		return segmentsErr
+	}
 
 	var segments domain.Segments
 	for _, segment := range parallelSegments {
@@ -95,4 +106,11 @@ func (p *promptWriter) writePrompt(ctx context.Context, req PromptCreationReques
 	}
 
 	return nil
+}
+
+func (p *promptWriter) appendError(mutex *sync.Mutex, errs, err error) error {
+	mutex.Lock()
+	errs = multierr.Combine(errs, fmt.Errorf("unable to get prompt segment: %w", err))
+	mutex.Unlock()
+	return errs
 }
