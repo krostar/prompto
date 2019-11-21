@@ -20,7 +20,7 @@ type userConfig struct {
 func segmentUser(rcfg interface{}) (domain.SegmentsProvider, error) {
 	cfg, isArgConfig := rcfg.(userConfig)
 	if !isArgConfig {
-		return nil, errors.New("segmentuser expected 1 arg of type userConfig")
+		return nil, errors.New("segmentUser expected 1 arg of type userConfig")
 	}
 
 	return &user{cfg: cfg}, nil
