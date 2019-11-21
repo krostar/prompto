@@ -65,6 +65,10 @@ var segmentsMapper = map[string]struct {
 		create:       segmentReadOnly,
 		configGetter: func(cfg Config) interface{} { return cfg.ReadOnly },
 	},
+	"user": {
+		create:       segmentUser,
+		configGetter: func(cfg Config) interface{} { return cfg.User },
+	},
 }
 
 // Config stores the configuration for all segments provider.
@@ -79,6 +83,7 @@ type Config struct {
 	LastCMDExecStatus lastCMDExecStatusConfig `yaml:"last-cmd-exec-status"`
 	LastCMDExecTime   lastCMDExecTimeConfig   `yaml:"last-cmd-exec-time"`
 	ReadOnly          readOnlyConfig          `yaml:"read-only"`
+	User              userConfig              `yaml:"user"`
 }
 
 // ProvideSegments provides segments based on configuration.
