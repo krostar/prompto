@@ -1,22 +1,25 @@
-// Package color handles ANSI true color.
+// Package color handles ANSI colors and colorization.
 package color
 
 import (
 	"errors"
 	"fmt"
+	"strings"
+
+	"go.uber.org/multierr"
 )
 
-// Color defines RGB true colors.
+// Color stores a color definition: RGB composition and kind.
 type Color struct {
+	kind Kind
 	r    uint8
 	g    uint8
 	b    uint8
-	kind Kind
 }
 
-// String returns the hex representation of an RGB color.
+// String returns the hex representation of a color.
 func (c Color) String() string {
-	return fmt.Sprintf("#%02x%02x%02x", c.r, c.g, c.b)
+	return strings.ToUpper(fmt.Sprintf("#%02x%02x%02x", c.r, c.g, c.b))
 }
 
 // RGB returns the color composites.
@@ -29,8 +32,17 @@ func (c Color) Equal(cc Color) bool {
 	return c.kind == cc.kind && c.r == cc.r && c.g == cc.g && c.b == cc.b
 }
 
-// HexColor parses an hexadecimal like color (#FF00FF).
-func HexColor(hex string) (Color, error) {
+// NewRGBFGColor creates a new foreground color from its RGB components.
+func NewRGBFGColor(r, g, b uint8) Color {
+	return Color{kind: KindForeground, r: r, g: g, b: b}
+}
+
+// NewRGBBGColor creates a new background color from its RGB components.
+func NewRGBBGColor(r, g, b uint8) Color {
+	return Color{kind: KindBackground, r: r, g: g, b: b}
+}
+
+func newHexColor(hex string) (Color, error) {
 	if hex[0] != '#' {
 		return Color{}, errors.New("invalid format")
 	}
@@ -47,7 +59,7 @@ func HexColor(hex string) (Color, error) {
 			return b - 'A' + 10
 		}
 
-		err = errors.New("invalid byte")
+		err = multierr.Append(err, errors.New("invalid byte"))
 
 		return 0
 	}
@@ -67,25 +79,33 @@ func HexColor(hex string) (Color, error) {
 		return Color{}, errors.New("invalid length")
 	}
 
-	return c, err
+	if err != nil {
+		return Color{}, err
+	}
+
+	return c, nil
 }
 
-// HexFGColor parses foreground hex color.
+// NewHexFGColor parses foreground hex color.
 // Invalid provided values return KindUnknown color kind.
-func HexFGColor(value string) Color {
-	color, err := HexColor(value)
-	if err == nil {
+func NewHexFGColor(value string) Color {
+	color, err := newHexColor(value)
+	if err != nil {
+		color = Color{}
+	} else {
 		color.kind = KindForeground
 	}
 
 	return color
 }
 
-// HexBGColor parses background hex color.
+// NewHexBGColor parses background hex color.
 // Invalid provided values return KindUnknown color kind.
-func HexBGColor(value string) Color {
-	color, err := HexColor(value)
-	if err == nil {
+func NewHexBGColor(value string) Color {
+	color, err := newHexColor(value)
+	if err != nil {
+		color = Color{}
+	} else {
 		color.kind = KindBackground
 	}
 

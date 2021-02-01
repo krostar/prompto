@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"fmt"
 	"io"
 
 	"github.com/krostar/prompto/pkg/color"
@@ -13,7 +12,7 @@ type Separator struct {
 	content string
 }
 
-// WriteTo implements io.WriterTo for Separator a segment's separator with style.
+// WriteTo writes to the provided writer the stylized separator.
 func (s *Separator) WriteTo(colorizer color.Colorizer, w io.Writer) (int64, error) {
 	n, err := w.Write([]byte(colorizer.Colorize(s.style, s.content)))
 	return int64(n), err
@@ -25,7 +24,7 @@ type SeparatorConfig struct {
 	ThinFGColor map[string]string      `yaml:"thin-fg-color"`
 }
 
-// SeparatorContentConfig defines the separator configuration.
+// SeparatorContentConfig defines the separator content configuration.
 type SeparatorContentConfig struct {
 	Left      string `yaml:"left"`
 	LeftThin  string `yaml:"left-thin"`
@@ -34,31 +33,26 @@ type SeparatorContentConfig struct {
 }
 
 // NewSeparator creates a new separator given the previous and current segment's style.
-func NewSeparator(d Direction, cfg SeparatorConfig, previous, current color.Style) (*Separator, error) {
-	_, prevBG, err := previous.Colors()
-	if err != nil {
-		return nil, fmt.Errorf("unable to get colors from previous segment style: %w", err)
-	}
-
-	_, currBG, err := current.Colors()
-	if err != nil {
-		return nil, fmt.Errorf("unable to get colors from current segment style: %w", err)
-	}
-
+func NewSeparator(d Direction, cfg SeparatorConfig, previous, current color.Style) *Separator {
 	var (
+		_, prevBG                 = previous.Colors()
+		prevBGR, prevBGG, prevBGB = prevBG.RGB()
+
+		_, currBG      = current.Colors()
 		sameBackground = currBG.Equal(prevBG)
-		fg             color.Color
+
+		fg color.Color
 	)
 
 	if sameBackground {
 		fgValue, exists := cfg.ThinFGColor[prevBG.String()]
 		if exists {
-			fg = color.HexFGColor(fgValue)
+			fg = color.NewHexFGColor(fgValue)
 		} else {
-			fg = color.HexFGColor(prevBG.String())
+			fg = color.NewRGBFGColor(prevBGR, prevBGG, prevBGB)
 		}
 	} else {
-		fg = color.HexFGColor(prevBG.String())
+		fg = color.NewRGBFGColor(prevBGR, prevBGG, prevBGB)
 	}
 
 	var content string
@@ -81,11 +75,11 @@ func NewSeparator(d Direction, cfg SeparatorConfig, previous, current color.Styl
 	return &Separator{
 		content: content,
 		style:   color.NewStyle(fg, currBG),
-	}, nil
+	}
 }
 
 // FinalSeparator returns the final separator given the last segment's style.
-func FinalSeparator(d Direction, cfg SeparatorConfig, lastSegmentStyle color.Style) (*Separator, error) {
+func FinalSeparator(d Direction, cfg SeparatorConfig, lastSegmentStyle color.Style) *Separator {
 	var content string
 
 	switch d {
@@ -95,13 +89,11 @@ func FinalSeparator(d Direction, cfg SeparatorConfig, lastSegmentStyle color.Sty
 		content = cfg.Content.Right
 	}
 
-	_, bg, err := lastSegmentStyle.Colors()
-	if err != nil {
-		return nil, fmt.Errorf("unable to split colors from last segment style %q: %w", lastSegmentStyle, err)
-	}
+	_, bg := lastSegmentStyle.Colors()
+	r, g, b := bg.RGB()
 
 	return &Separator{
 		content: content,
-		style:   color.NewStyle(color.HexFGColor(bg.String()), color.Color{}),
-	}, err
+		style:   color.NewStyle(color.NewRGBFGColor(r, g, b), color.Color{}),
+	}
 }

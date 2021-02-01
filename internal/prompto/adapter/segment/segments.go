@@ -41,10 +41,6 @@ var segmentsMapper = map[string]struct {
 		create:       segmentGIT,
 		configGetter: func(cfg Config) interface{} { return cfg.GIT },
 	},
-	"hi": {
-		create:       segmentHi,
-		configGetter: func(cfg Config) interface{} { return cfg.Hi },
-	},
 	"k8s": {
 		create:       segmentK8S,
 		configGetter: func(cfg Config) interface{} { return cfg.K8S },
@@ -56,6 +52,10 @@ var segmentsMapper = map[string]struct {
 	"last-cmd-exec-time": {
 		create:       segmentLastCMDExecTime,
 		configGetter: func(cfg Config) interface{} { return cfg.LastCMDExecTime },
+	},
+	"msg": {
+		create:       segmentMsg,
+		configGetter: func(cfg Config) interface{} { return cfg.Msg },
 	},
 	"newline": {
 		create:       segmentNewline,
@@ -78,7 +78,7 @@ type Config struct {
 
 	CWD               cwdConfig               `yaml:"cwd"`
 	GIT               gitConfig               `yaml:"git"`
-	Hi                hiConfig                `yaml:"hi"`
+	Msg               msgConfig               `yaml:"msg"`
 	K8S               k8sConfig               `yaml:"k8s"`
 	LastCMDExecStatus lastCMDExecStatusConfig `yaml:"last-cmd-exec-status"`
 	LastCMDExecTime   lastCMDExecTimeConfig   `yaml:"last-cmd-exec-time"`
@@ -159,19 +159,17 @@ func replaceEnvironmentInPath(path string) string {
 }
 
 func createSubstituteTemplate(template, value string, m map[string]string) (bool, error) {
-	var matched bool
-
 	re, err := regexp.Compile(template)
 	if err != nil {
-		return matched, fmt.Errorf("unable to compile template %q: %w", template, err)
+		return false, fmt.Errorf("unable to compile template %q: %w", template, err)
 	}
 
 	match := re.FindStringSubmatch(value)
+	matched := len(match) > 0
 
 	for i, name := range re.SubexpNames() {
 		if i != 0 && name != "" && i < len(match) {
 			m[name] = match[i]
-			matched = true
 		}
 	}
 

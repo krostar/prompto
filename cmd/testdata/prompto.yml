@@ -1,0 +1,56 @@
+---
+
+left-segments:
+  - "last-cmd-exec-time"
+  - "last-cmd-exec-status"
+  - "hi"
+
+right-segments:
+  - "read-only"
+  - "cwd"
+  - "git"
+
+separator:
+  thin-fg-color:
+    "#e4e4e4": "#a8a8a8"
+    "#303030": "#808080"
+    "#005faf": "#0087d7"
+    "#d75f00": "#ff8700"
+    "#870000": "#5f0000"
+  content:
+    left: "\uE0B0"
+    left-thin: "\uE0B1"
+    right: "\uE0B2"
+    right-thin: "\uE0B3"
+
+segments:
+  hi:
+    color: {fg: "#bcbcbc", bg: "#303030"}
+    content: "$"
+  cwd:
+    special:
+      "$GITHUB_WORKSPACE":
+        color: {fg: "#e4e4e4", bg: "#303030"}
+        replace-with: "~"
+  last-cmd-exec-status:
+    success:
+      hide: true
+    failure:
+      color: {fg: "#e4e4e4", bg: "#870000"}
+  last-cmd-exec-time:
+    color: {fg: "#e4e4e4", bg: "#303030"}
+    treshold-display: "1s"
+    treshold-truncate:
+      "1s": "10ms"
+      "1m": "100ms"
+      "1h": "10s"
+  read-only:
+    color: {fg: "#e4e4e4", bg: "#870000"}
+    content: "\uE0A2"
+  git:
+    clean:
+      color: {fg: "#e4e4e4", bg: "#008700"}
+    changes:
+      color: {fg: "#e4e4e4", bg: "#870000"}
+
+...

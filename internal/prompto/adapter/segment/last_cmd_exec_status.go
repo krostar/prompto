@@ -14,7 +14,7 @@ type lastCMDExecStatus struct {
 }
 
 type lastCMDExecStatusConfig struct {
-	StatusCode uint `json:"-" yaml:"-"`
+	StatusCode uint16 `json:"-" yaml:"-"`
 
 	Success lastCMDExecStatusStateConfig `yaml:"success"`
 	Failure lastCMDExecStatusStateConfig `yaml:"failure"`
@@ -56,7 +56,6 @@ func (s *lastCMDExecStatus) ProvideSegments() (domain.Segments, error) {
 	return domain.Segments{
 		domain.
 			NewSegment(content).
-			SetStyle(cfg.Color.ToStyle()).
-			WithSpaceAround(),
+			SetStyle(cfg.Color.ToStyle()),
 	}, nil
 }

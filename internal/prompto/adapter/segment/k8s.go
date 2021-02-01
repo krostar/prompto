@@ -56,8 +56,7 @@ func (s *k8s) ProvideSegments() (domain.Segments, error) {
 	return splitContentInSegments(content, func(content string) *domain.Segment {
 		return domain.
 			NewSegment(content).
-			SetStyle(style).
-			WithSpaceAround()
+			SetStyle(style)
 	}), nil
 }
 

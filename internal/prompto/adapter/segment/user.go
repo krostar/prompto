@@ -38,7 +38,6 @@ func (u *user) ProvideSegments() (domain.Segments, error) {
 	return domain.Segments{
 		domain.
 			NewSegment(cu.Username).
-			WithSpaceAround().
 			SetStyle(u.cfg.Color.ToStyle()),
 	}, nil
 }

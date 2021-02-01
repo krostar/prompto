@@ -107,4 +107,7 @@ end
 
 ## Comparaison
 
-// TODO
+| Command                                                                                                                                                     |  Mean [ms] | Min [ms] | Max [ms] |    Relative |
+| :---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------: | -------: | -------: | ----------: |
+| `prompto --config cmd/prompto/testdata/prompto.yml`                                                                                                         | 21.5 ± 8.5 |     18.8 |    102.6 |        1.00 |
+| `powerline-go -shell bare -eval -numeric-exit-codes -modules duration,exit,perms,cwd,git -duration 10 -error 42 -theme cmd/prompto/testdata/powerline.json` | 22.6 ± 3.0 |     20.2 |     44.9 | 1.05 ± 0.43 |

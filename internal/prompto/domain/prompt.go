@@ -16,30 +16,23 @@ type Prompt struct {
 }
 
 // NewPrompt creates a new prompt given its components.
-func NewPrompt(segments Segments, d Direction, separatorConfig SeparatorConfig) (*Prompt, error) {
+func NewPrompt(segments Segments, d Direction, separatorConfig SeparatorConfig) *Prompt {
 	if len(segments) == 0 {
-		return &Prompt{direction: d}, nil
+		return &Prompt{direction: d}
 	}
 
 	finalSegment := segments[len(segments)-1]
 
-	if err := segments.ApplyDirectionAndSeparators(d, separatorConfig); err != nil {
-		return nil, fmt.Errorf("unable to set segments separators: %w", err)
-	}
-
-	finalSeparator, err := FinalSeparator(d, separatorConfig, finalSegment.Style())
-	if err != nil {
-		return nil, fmt.Errorf("unable to get final separator: %w", err)
-	}
+	segments.applyDirectionAndSeparators(d, separatorConfig)
 
 	return &Prompt{
 		direction:      d,
 		segments:       segments,
-		finalSeparator: *finalSeparator,
-	}, nil
+		finalSeparator: *FinalSeparator(d, separatorConfig, finalSegment.style),
+	}
 }
 
-// WriteTo implements io.WriterTo for Segments to write all segment's content with style.
+// WriteTo writes to the provided writer the stylized prompt.
 func (p *Prompt) WriteTo(colorizer color.Colorizer, w io.Writer) (int64, error) {
 	var wrote int64
 

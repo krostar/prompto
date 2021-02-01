@@ -1,0 +1,39 @@
+---
+
+name: "Test and Release"
+on:
+  pull_request: {}
+  push:
+    branches: [ "master" ]
+
+jobs:
+  lint:
+    name: "Lint all supported files"
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: "actions/checkout@master"
+      - run: "make lint-go"
+
+  test-go:
+    name: "Test go files and dependencies"
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: "actions/checkout@master"
+      - run: "make test-go-deps test-go"
+
+  test-exec:
+    name: "Assert prompto is working on ${{ matrix.os }}"
+    runs-on: "${{ matrix.os }}"
+      strategy:
+        fail-fast: false
+        matrix:
+          os: [ "ubuntu-latest", "macos-latest", "windows-latest" ]
+    steps:
+      - uses: "actions/checkout@master"
+      - uses: "actions/setup-go@v1"
+          with:
+            go-version: "1.13.x"
+      - run: "make build"
+      - run: "GOTEST_CI=1 go test github.com/krostar/prompto/cmd/prompto"
+
+...

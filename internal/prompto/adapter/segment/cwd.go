@@ -112,8 +112,7 @@ func (s *cwd) pathToSegments(path string) domain.Segments {
 	segments := splitContentInSegments(content, func(content string) *domain.Segment {
 		return domain.
 			NewSegment(content).
-			SetStyle(style).
-			WithSpaceAround()
+			SetStyle(style)
 	})
 
 	segments.InverseOrder()

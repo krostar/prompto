@@ -25,11 +25,11 @@ func (c Config) ToStyle() Style {
 	)
 
 	if c.Foreground != nil {
-		fg = HexFGColor(*c.Foreground)
+		fg = NewHexFGColor(*c.Foreground)
 	}
 
 	if c.Background != nil {
-		bg = HexBGColor(*c.Background)
+		bg = NewHexBGColor(*c.Background)
 	}
 
 	return NewStyle(fg, bg)

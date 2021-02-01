@@ -14,7 +14,7 @@ type lastCMDExecTime struct {
 }
 
 type lastCMDExecTimeConfig struct {
-	DurationNS uint `json:"-" yaml:"-"`
+	DurationNS uint64 `json:"-" yaml:"-"`
 
 	Color            color.Config                    `yaml:"color"`
 	TresholdDisplay  time.Duration                   `yaml:"treshold-display"`
@@ -48,7 +48,6 @@ func (s *lastCMDExecTime) ProvideSegments() (domain.Segments, error) {
 	return domain.Segments{
 		domain.
 			NewSegment(d.String()).
-			WithSpaceAround().
 			SetStyle(s.cfg.Color.ToStyle()),
 	}, nil
 }

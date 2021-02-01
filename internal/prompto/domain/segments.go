@@ -1,58 +1,42 @@
 package domain
 
 import (
-	"errors"
-
 	"github.com/krostar/prompto/pkg/color"
 )
 
 // Segments stores multiple segments of a prompt.
 type Segments []*Segment
 
-// ApplyDirectionAndSeparators sets the separators given a direction and a separator config.
-func (ss Segments) ApplyDirectionAndSeparators(d Direction, cfg SeparatorConfig) error {
+func (ss Segments) applyDirectionAndSeparators(d Direction, cfg SeparatorConfig) {
 	if d == DirectionRight {
 		ss.InverseOrder()
 	}
 
 	var previous *Segment
 	for _, s := range ss {
-		s.setDirection(d)
+		s.direction = d
 
 		if previous != nil && !previous.separatorDisabledForNextSegment {
-			if err := ss.setSegmentSeparator(s, d, cfg, previous.Style()); err != nil {
-				return err
-			}
+			ss.setSegmentSeparator(s, d, cfg, previous.style)
 		}
 
 		previous = s
 	}
-
-	return nil
 }
 
-func (ss Segments) setSegmentSeparator(s *Segment, d Direction, cfg SeparatorConfig, previousStyle color.Style) error {
-	var (
-		separator *Separator
-		err       error
-	)
+func (ss Segments) setSegmentSeparator(s *Segment, d Direction, cfg SeparatorConfig, previousStyle color.Style) {
+	var separator *Separator
 
 	switch d {
 	case DirectionLeft:
-		separator, err = NewSeparator(d, cfg, previousStyle, s.Style())
+		separator = NewSeparator(d, cfg, previousStyle, s.style)
 	case DirectionRight:
-		separator, err = NewSeparator(d, cfg, s.Style(), previousStyle)
-	default:
-		err = errors.New("unknown direction")
+		separator = NewSeparator(d, cfg, s.style, previousStyle)
 	}
 
-	if err != nil {
-		return err
+	if separator != nil {
+		s.separator = separator
 	}
-
-	s.setSeparator(*separator)
-
-	return nil
 }
 
 // InverseOrder reverses the order of the segments.

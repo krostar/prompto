@@ -24,11 +24,8 @@ type Segment struct {
 // NewSegment creates a new segment.
 // Multiple contents can be provided, they will be printed in direction order.
 func NewSegment(contents ...string) *Segment {
-	return &Segment{contents: contents}
+	return &Segment{contents: contents, spaceBefore: true, spaceAfter: true}
 }
-
-// Style returns the style of the segment.
-func (s *Segment) Style() color.Style { return s.style }
 
 // SetStyle sets the style of the segment.
 func (s *Segment) SetStyle(style color.Style) *Segment {
@@ -36,22 +33,9 @@ func (s *Segment) SetStyle(style color.Style) *Segment {
 	return s
 }
 
-// WithSpaceAround adds some space around segment.
-func (s *Segment) WithSpaceAround() *Segment {
-	s.spaceBefore = true
-	s.spaceAfter = true
-	return s
-}
-
-// WithSpaceBefore adds a space before the segment content.
-func (s *Segment) WithSpaceBefore() *Segment {
-	s.spaceBefore = true
-	return s
-}
-
-// WithSpaceAfter adds a space after the segment content.
-func (s *Segment) WithSpaceAfter() *Segment {
-	s.spaceAfter = true
+// DisableSpaceAfter disables spaces put after segment content.
+func (s *Segment) DisableSpaceAfter() *Segment {
+	s.spaceAfter = false
 	return s
 }
 
@@ -59,14 +43,6 @@ func (s *Segment) WithSpaceAfter() *Segment {
 func (s *Segment) DisableNextSegmentSeparator() *Segment {
 	s.separatorDisabledForNextSegment = true
 	return s
-}
-
-func (s *Segment) setDirection(d Direction) {
-	s.direction = d
-}
-
-func (s *Segment) setSeparator(sep Separator) {
-	s.separator = &sep
 }
 
 func (s *Segment) contentWithSpace() string {
@@ -96,7 +72,7 @@ func (s *Segment) contentWithSpace() string {
 	return content
 }
 
-// WriteTo implements io.WriterTo for Segment to write segment's content with provided style.
+// WriteTo writes to the provided writer the stylized segment.
 func (s *Segment) WriteTo(colorizer color.Colorizer, w io.Writer) (int64, error) {
 	var wrote int64
 

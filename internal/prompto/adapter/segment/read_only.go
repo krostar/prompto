@@ -46,8 +46,8 @@ func (s *readOnly) ProvideSegments() (domain.Segments, error) {
 
 	if unix.Access(s.cwd, unix.W_OK) != nil {
 		segments = domain.Segments{
-			domain.NewSegment(s.cfg.Content).
-				WithSpaceAround().
+			domain.
+				NewSegment(s.cfg.Content).
 				SetStyle(s.cfg.Color.ToStyle()),
 		}
 	}

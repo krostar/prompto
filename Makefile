@@ -1,8 +1,9 @@
-DIR_ABS    := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
-DIR_BIN    := $(DIR_ABS)/build/bin
+DIR_ABS           := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
+DIR_BIN           := $(DIR_ABS)/build/bin
 
-BIN_PROMPTO := $(DIR_BIN)/prompto
-BINARIES    := $(BIN_PROMPTO)
+DOCKER_CI_VERSION := ".v1.5.0"
+BIN_CLI	          := $(DIR_BIN)/prompto
+BINARIES          := $(BIN_CLI)
 
 # use this rule as the default make rule
 .DEFAULT_GOAL := help
@@ -14,16 +15,15 @@ help:
 ###
 # aliases to use docker to test, lint, and build stuff
 ###
-.PHONY: build-example $(BINARIES)
-build-prompto: $(BIN_PROMPTO)	## Build the prompto binary
-build: $(BINARIES)				## Build all binaries
+.PHONY: build $(BINARIES)
+build: $(BINARIES)	## Build binaries
 $(BINARIES): $(DIR_BIN)/%:
 	@$(MAKE) ci-build-go DOCKER_RUN_ARGS=$(*)
 	@command -v go 1>&2 1>/dev/null && go mod tidy || true
 
-.PHONY: lint-all test-all
-lint-all: lint-go lint-markdown lint-yaml	## Run all possible linters
-test-all: test-go test-go-deps				## Run all possible tests
+.PHONY: lint test
+lint: lint-go lint-markdown lint-yaml	## Run all possible linters
+test: test-go test-go-deps				## Run all possible tests
 
 .PHONY: lint-go lint-markdown lint-yaml lint-sh
 lint-go: ci-lint-go				## Lint go files
@@ -38,7 +38,7 @@ test-go-short: override DOCKER_RUN_OPTS += --env TEST_SHORT=1
 test-go-short: ci-test-go		## Test go (short tests only)
 
 .PHONY: clean
-clean:	## Clean rebuildable artifacts
+clean:	## Clean re-buildable artifacts
 	$(RM) -r $(DIR_BIN)
 
 ###
@@ -60,5 +60,5 @@ ci-%:
 		--rm												\
 		--mount type=bind,source="$(DIR_ABS)",target=/app	\
 		$(DOCKER_RUN_OPTS)									\
-		"krostar/ci:$(*)"									\
+		"krostar/ci:$(*)$(DOCKER_CI_VERSION)"				\
 		$(DOCKER_RUN_ARGS)

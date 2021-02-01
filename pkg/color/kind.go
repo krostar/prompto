@@ -4,8 +4,7 @@ package color
 type Kind int
 
 const (
-	// KindUnknown is the zero value for ColorKind,
-	// which is an invalid value.
+	// KindUnknown is the zero value for ColorKind, which is an invalid value.
 	KindUnknown Kind = iota
 	// KindForeground applies the color to the foreground.
 	KindForeground
